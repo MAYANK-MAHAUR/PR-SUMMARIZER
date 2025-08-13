@@ -83,8 +83,9 @@ def summarize_diff_with_dobby(diff_text):
 
 ---
 **DIFF:**
-{diff_text}"""
----  data = {
+{diff_text}
+"""
+    data = {
         "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": prompt}]
