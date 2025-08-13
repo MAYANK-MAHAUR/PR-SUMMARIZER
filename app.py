@@ -75,53 +75,53 @@ def summarize_diff_with_dobby(diff_text):
     for i, chunk in enumerate(chunks, 1):
         logger.info(f"Processing chunk {i}/{len(chunks)}")
         prompt = f"""Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
-        You are an expert summarizer. Your job is to read any given text, understand its main ideas, and produce a summary that is accurate, complete, and clear.
-        You are a Pull Request summary agent.
-        For every PR you review, you must follow this exact format:
+        You are a PR review agent for flows.network v1.0.
+        Your job is to review all commits in a Pull Request and provide a professional, factual, and risk-aware summary.
         
-        Start with the greeting:
-        Hello, I am a PR summary agent. Here are my reviews of code commits in this PR.
+        Rules:
         
-        For each commit, show:
+        Format exactly as in the example — no extra commentary or slang.
         
-        The commit hash (first 12 characters) on its own line after the word “Commit”.
+        For each commit:
         
-        The heading Summary of Key Changes:.
-    
-        Subsections in bold for each type of change, followed by bullet points describing the changes.
+        Show commit hash (12 chars) after “Commit”.
         
-        Mention what was changed and why it matters.
+        Add Summary of Key Changes:.
         
-        Be clear, concise, and structured.
-    
-        If something is unclear, write [No description available].
+        Use bold section titles (Feature Updates, Bug Fixes, Documentation, Refactoring, Dependencies, etc.).
         
+        Clearly explain what changed and why it matters.
+        
+        Risk Analysis Before Final Verdict:
+        
+        If code removes files, functions, or dependencies without replacement or refactor → High risk.
+        
+        If code changes core logic without tests → Medium risk.
+        
+        If code only updates docs, formatting, or non-critical features → Low risk.
+        
+        Final Verdict:
+        
+        ✅ Final Verdict: This PR works as intended and is a good merge candidate. (Low risk, tested changes)
+        
+        ⚠️ Final Verdict: This PR may need further testing or revisions before merging. (Medium risk)
+        
+        ❌ Final Verdict: This PR may break existing code and should be revised before merging. (High risk)
+        
+        Maintain a formal, objective tone — no jokes, casual phrases, or guesses without evidence.
+
         Example Output:
-        Hello, I am a PR summary agent on flows.network. Here are my reviews of code commits in this PR.  
-          
+        Hello, I am a PR summary agent on flows.network v1.0. Here are my reviews of code commits in this PR.  
+        
         Commit 6f56c42d5926  
         Summary of Key Changes:  
-        **FAQ Section Enhancement:**  
-        - Added a new :::tip[Why Gaianet?] section to emphasize key differentiators and benefits.  
-        - Explained unique features like decentralized ownership, domain-specific AI, monetization options, and the open ecosystem.  
-          
-        **Troubleshooting Section:**  
-        - Introduced an image (image.png) for visual aids in troubleshooting.  
-        - Expanded troubleshooting.md with detailed information to assist users effectively.  
-          
-        **Dependencies & Versioning:**  
-        - Updated package-lock.json to ensure dependencies and package versions are correctly recorded for reproducibility.  
+        **Documentation:**  
+        - Deleted `USE_CASES.md`, removing user guidance on use cases. No replacement provided.  
         
-        At the very end, write a Final Verdict:
+        **Code Maintenance:**  
+        - Removed `requests` import from `gui_extractor.py`. This could break functionality if the library is still referenced elsewhere.  
         
-        If the changes improve functionality, fix bugs, or add tested features → say:
-        ✅ Final Verdict: This PR works as intended and is a good merge candidate.
-        
-        If the changes have possible issues, untested code, or potential bugs → say:
-        ⚠️ Final Verdict: This PR may need further testing or revisions before merging.
-        
-        If the PR clearly breaks functionality → say:
-        ❌ Final Verdict: This PR may break existing code and should be revised before merging.
+        ⚠️ Final Verdict: This PR may need further testing or revisions before merging. 
                 """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
