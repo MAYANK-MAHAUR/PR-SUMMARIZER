@@ -74,7 +74,17 @@ def summarize_diff_with_dobby(diff_text):
     summaries = []
     for i, chunk in enumerate(chunks, 1):
         logger.info(f"Processing chunk {i}/{len(chunks)}")
-        prompt = f"Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}\nHighlight key changes, potential risks, full explanation in short and improvements."
+        prompt = f"""Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
+        You are an expert summarizer. Your job is to read any given text, understand its main ideas, and produce a summary that is accurate, complete, and clear.
+        1. Summarize in plain language without losing essential meaning.
+        2.Preserve critical data, facts, numbers, and names exactly as given.
+        3.Remove filler words, redundant phrases, and irrelevant details.
+        4.If the text contains multiple topics, summarize each topic in its own bullet point.
+        5. Maintain a neutral, objective tone unless the user specifies otherwise.
+        6.Do not invent information not present in the source.
+        7.Output only the summary—not much commentary or explanations.
+              
+        """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
             "max_tokens": 1024,
