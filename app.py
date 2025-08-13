@@ -84,6 +84,24 @@ def summarize_diff_with_dobby(diff_text):
         6.Do not invent information not present in the source.
         7.Output only the summary—not much commentary or explanations.
         8.nonetheless dont forget to format in the best way so easy to read and identify.
+        
+        Output Format:
+        **Summary:**  
+        [1–2 sentence high-level overview]  
+          
+        **Changes Made:**  
+        - [Key change 1]  
+        - [Key change 2]  
+        - …  
+          
+        **Files/Modules Impacted:**  
+        - [File or module name] – [short impact description]  
+          
+        **Risks & Considerations:**  
+        - [Risk 1 or "None"]  
+          
+        **Testing Notes:**  
+        - [Testing done or required]  
         """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
