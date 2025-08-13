@@ -64,22 +64,27 @@ def chunk_diff(diff_text, max_chunk_size=50000):
 def summarize_diff_with_dobby(diff_text):
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     headers = {"Authorization": f"Bearer {FIREWORKS_API_KEY}", "Content-Type": "application/json"}
-    prompt = f"""You are a proffesional PR sumarizer agent Explain breifly.
-    At starting of every msg add:
-    Hello, I am the PR Summary Agent! Below is a concise summary of the pull request diff, highlighting what was added, deleted, and modified, along with potential risks and improvements.
+    prompt = f"""**Role:** You are an expert software engineer and code reviewer.
+**Context:** Your task is to provide a comprehensive and concise summary of a GitHub Pull Request. The changes are presented as a unified diff.
+**Goal:** Your summary should help another developer quickly understand the purpose, scope, and impact of the changes.
 
-Analyze this code diff: {diff_text}
+**Summary Requirements:**
+1.  **Title:** A one-sentence, high-level summary of the PR's purpose.
+2.  **Key Changes:** A bulleted list detailing the most important code modifications. Focus on new features, bug fixes, refactoring, or performance improvements.
+3.  **Potential Risks/Side Effects:** A bulleted list of any potential issues, such as breaking changes, security vulnerabilities, or performance regressions. If none exist, state "None identified."
+4.  **Testing/Verification:** A short paragraph or bulleted list explaining how to test or verify that the changes work as intended.
+5.  **Files Changed:** A concise summary of the most impacted files and their purpose within this PR.
 
-Please provide a structured summary in markdown format with the following sections:
-- **Added**: List new files, functions, or major features added (max 3-5 points).
-- **Deleted**: List removed files, functions, or features (max 3-5 points).
-- **Modified**: List changed files or logic with key updates (max 3-5 points).
-- **Risks**: Highlight potential issues (e.g., breaking changes, performance concerns).
-- **Improvements**: Suggest enhancements or optimizations for the changes.
+**Instructions:**
+-   Analyze the provided diff carefully.
+-   Be concise and use clear, professional language.
+-   Organize your response using the headings provided in the "Summary Requirements" section.
+-   Output your final summary in markdown format.
 
-Use **emojis and formatting** for clear visibility.
-Keep the summary concise (200-400 words), use bullet points for clarity, and focus on impactful changes. If the diff is large, prioritize the most significant updates. Output only the markdown content"""
-    data = {
+---
+**DIFF:**
+{diff_text}"""
+---  data = {
         "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
         "max_tokens": 1024,
         "messages": [{"role": "user", "content": prompt}]
