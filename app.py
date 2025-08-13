@@ -20,9 +20,6 @@ FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 
-if not FIREWORKS_API_KEY or not GITHUB_TOKEN:
-    logger.error("Missing required environment variables: FIREWORKS_API_KEY or GITHUB_TOKEN")
-    raise ValueError("Missing required environment variables")
 
 def verify_signature(payload, signature):
     if not GITHUB_WEBHOOK_SECRET:
@@ -65,7 +62,7 @@ def chunk_diff(diff_text, max_chunk_size=50000):
     return chunks
 
 def summarize_diff_with_dobby(diff_text):
-    logger.info("Summarizing diff with Fireworks API")
+    logger.info("Summarizing diff with Dobby")
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     headers = {
         "Accept": "application/json",
@@ -77,7 +74,7 @@ def summarize_diff_with_dobby(diff_text):
     summaries = []
     for i, chunk in enumerate(chunks, 1):
         logger.info(f"Processing chunk {i}/{len(chunks)}")
-        prompt = f"Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}\nHighlight key changes, potential risks, and improvements."
+        prompt = f"Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}\nHighlight key changes, potential risks, full explanation in short and improvements."
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
             "max_tokens": 1024,
