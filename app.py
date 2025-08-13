@@ -62,75 +62,29 @@ def chunk_diff(diff_text, max_chunk_size=50000):
     return chunks
 
 def summarize_diff_with_dobby(diff_text):
-    logger.info("Summarizing diff with Dobby")
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {FIREWORKS_API_KEY}",
-    }
-    
-    chunks = chunk_diff(diff_text, max_chunk_size=50000)
-    summaries = []
-    for i, chunk in enumerate(chunks, 1):
-        logger.info(f"Processing chunk {i}/{len(chunks)}")
-        prompt = f"""
-        Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
-        
-        You are a PR review agent.
-        Your job is to review all commits in a Pull Request and provide a professional, factual, and risk-aware summary.
-        
-        Rules:
-        1. Format exactly as in the example — no extra commentary or slang.
-        2. For each commit:
-           - Show commit hash (12 chars) after “Commit”.
-           - Add 'Summary of Key Changes:'.
-           - Use bold section titles (Feature Updates, Bug Fixes, Documentation, Refactoring, Dependencies, etc.).
-           - Clearly explain what changed and why it matters.
-        3. Risk Analysis Before Final Verdict:
-           - If code removes files, functions, or dependencies without replacement or refactor → High risk.
-           - If code changes core logic without tests → Medium risk.
-           - If code only updates docs, formatting, or non-critical features → Low risk.
-        4. Final Verdict:
-           - ✅ Final Verdict: This PR works as intended and is a good merge candidate. (Low risk, tested changes)
-           - ⚠️ Final Verdict: This PR may need further testing or revisions before merging. (Medium risk)
-           - ❌ Final Verdict: This PR may break existing code and should be revised before merging. (High risk)
-        5. Maintain a formal, objective tone — no jokes, casual phrases, or guesses without evidence.
-        
-        Example Output:
-        ###Hello, I am a PR summary agent on flows.network v1.0. Here are my reviews of code commits in this PR.
-        
-        Commit 6f56c42d5926
-        #Summary of Key Changes:
-        - something
-        
-        **Code Maintenance:**
-        - something
-        
-            Final Verdict: something.
-        """
+    headers = {"Authorization": f"Bearer {FIREWORKS_API_KEY}", "Content-Type": "application/json"}
+    prompt = f"""Hello, I am the PR Summary Agent! Below is a concise summary of the pull request diff, highlighting what was added, deleted, and modified, along with potential risks and improvements.
 
-        data = {
-            "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
-            "max_tokens": 1024,
-            "top_p": 1,
-            "top_k": 40,
-            "presence_penalty": 0,
-            "frequency_penalty": 0,
-            "temperature": 0.6,
-            "messages": [{"role": "user", "content": prompt}]
-        }
-        try:
-            response = requests.post(url, headers=headers, json=data)
-            response.raise_for_status()
-            summary = response.json()['choices'][0]['message']['content']
-            summaries.append(f"**Chunk {i} Summary**:\n{summary}")
-        except Exception as e:
-            logger.error(f"Error summarizing chunk {i}: {str(e)}")
-            summaries.append(f"**Chunk {i} Summary**: Error processing chunk")
-    combined_summary = "\n\n".join(summaries)
-    logger.info("Combined summary generated")
-    return combined_summary
+Analyze this code diff: {diff_text}
+
+Please provide a structured summary in markdown format with the following sections:
+- **Added**: List new files, functions, or major features added (max 3-5 points).
+- **Deleted**: List removed files, functions, or features (max 3-5 points).
+- **Modified**: List changed files or logic with key updates (max 3-5 points).
+- **Risks**: Highlight potential issues (e.g., breaking changes, performance concerns).
+- **Improvements**: Suggest enhancements or optimizations for the changes.
+
+Keep the summary concise (200-400 words), use bullet points for clarity, and focus on impactful changes. If the diff is large, prioritize the most significant updates. Output only the markdown content, starting with the greeting."""
+    data = {
+        "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
+        "max_tokens": 1024,
+        "messages": [{"role": "user", "content": prompt}]
+    }
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    return response.json()['choices'][0]['message']['content']
+
 
 def post_comment_to_pr(owner, repo, pull_number, comment):
     logger.info(f"Posting comment to {owner}/{repo}/pull/{pull_number}")
