@@ -74,55 +74,42 @@ def summarize_diff_with_dobby(diff_text):
     summaries = []
     for i, chunk in enumerate(chunks, 1):
         logger.info(f"Processing chunk {i}/{len(chunks)}")
-        prompt = f"""Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
-        You are a PR review agent for flows.network v1.0.
+        prompt = f"""
+        Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
+        
+        You are a PR review agent.
         Your job is to review all commits in a Pull Request and provide a professional, factual, and risk-aware summary.
         
         Rules:
+        1. Format exactly as in the example — no extra commentary or slang.
+        2. For each commit:
+           - Show commit hash (12 chars) after “Commit”.
+           - Add 'Summary of Key Changes:'.
+           - Use bold section titles (Feature Updates, Bug Fixes, Documentation, Refactoring, Dependencies, etc.).
+           - Clearly explain what changed and why it matters.
+        3. Risk Analysis Before Final Verdict:
+           - If code removes files, functions, or dependencies without replacement or refactor → High risk.
+           - If code changes core logic without tests → Medium risk.
+           - If code only updates docs, formatting, or non-critical features → Low risk.
+        4. Final Verdict:
+           - ✅ Final Verdict: This PR works as intended and is a good merge candidate. (Low risk, tested changes)
+           - ⚠️ Final Verdict: This PR may need further testing or revisions before merging. (Medium risk)
+           - ❌ Final Verdict: This PR may break existing code and should be revised before merging. (High risk)
+        5. Maintain a formal, objective tone — no jokes, casual phrases, or guesses without evidence.
         
-        Format exactly as in the example — no extra commentary or slang.
-        
-        For each commit:
-        
-        Show commit hash (12 chars) after “Commit”.
-        
-        Add Summary of Key Changes:.
-        
-        Use bold section titles (Feature Updates, Bug Fixes, Documentation, Refactoring, Dependencies, etc.).
-        
-        Clearly explain what changed and why it matters.
-        
-        Risk Analysis Before Final Verdict:
-        
-        If code removes files, functions, or dependencies without replacement or refactor → High risk.
-        
-        If code changes core logic without tests → Medium risk.
-        
-        If code only updates docs, formatting, or non-critical features → Low risk.
-        
-        Final Verdict:
-        
-        ✅ Final Verdict: This PR works as intended and is a good merge candidate. (Low risk, tested changes)
-        
-        ⚠️ Final Verdict: This PR may need further testing or revisions before merging. (Medium risk)
-        
-        ❌ Final Verdict: This PR may break existing code and should be revised before merging. (High risk)
-        
-        Maintain a formal, objective tone — no jokes, casual phrases, or guesses without evidence.
-
         Example Output:
-        Hello, I am a PR summary agent on flows.network v1.0. Here are my reviews of code commits in this PR.  
+        ###Hello, I am a PR summary agent on flows.network v1.0. Here are my reviews of code commits in this PR.
         
-        Commit 6f56c42d5926  
-        Summary of Key Changes:  
-        **Documentation:**  
-        - Deleted `USE_CASES.md`, removing user guidance on use cases. No replacement provided.  
+        Commit 6f56c42d5926
+        #Summary of Key Changes:
+        - something
         
-        **Code Maintenance:**  
-        - Removed `requests` import from `gui_extractor.py`. This could break functionality if the library is still referenced elsewhere.  
+        **Code Maintenance:**
+        - something
         
-        ⚠️ Final Verdict: This PR may need further testing or revisions before merging. 
-                """
+            Final Verdict: something.
+        """
+
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
             "max_tokens": 1024,
