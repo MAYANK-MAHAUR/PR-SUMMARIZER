@@ -64,26 +64,35 @@ def chunk_diff(diff_text, max_chunk_size=50000):
 def summarize_diff_with_dobby(diff_text):
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     headers = {"Authorization": f"Bearer {FIREWORKS_API_KEY}", "Content-Type": "application/json"}
-    prompt = f"""**Role:** You are an expert software engineer and code reviewer.
-**Context:** Your task is to provide a comprehensive and concise summary of a GitHub Pull Request. The changes are presented as a unified diff.
-**Goal:** Your summary should help another developer quickly understand the purpose, scope, and impact of the changes.
-
-**Summary Requirements:**
-1.  **Title:** A one-sentence, high-level summary of the PR's purpose.
-2.  **Key Changes:** A bulleted list detailing the most important code modifications. Focus on new features, bug fixes, refactoring, or performance improvements.
-3.  **Potential Risks/Side Effects:** A bulleted list of any potential issues, such as breaking changes, security vulnerabilities, or performance regressions. If none exist, state "None identified."
-4.  **Testing/Verification:** A short paragraph or bulleted list explaining how to test or verify that the changes work as intended.
-5.  **Files Changed:** A concise summary of the most impacted files and their purpose within this PR.
+    prompt = f"""
+**Role:** You are an expert software developer.
+**Task:** Summarize the provided GitHub pull request diff.
+**Goal:** Generate a concise, high-quality summary formatted with clear markdown headings and bullet points.
 
 **Instructions:**
--   Analyze the provided diff carefully.
--   Be concise and use clear, professional language.
--   Organize your response using the headings provided in the "Summary Requirements" section.
--   Output your final summary in markdown format.
+-   Analyze the diff to identify the main changes, potential issues, and verification steps.
+-   Provide the summary using the following structure.
+-   Be brief and to the point.
+
+## Summary
+-   Provide a 1-2 sentence overview of the PR's purpose.
+
+## Key Changes
+-   Use a bulleted list for the most important code modifications.
+
+## Potential Risks
+-   List any potential side effects, bugs, or breaking changes in a bulleted list.
+
+## Verification
+-   List the steps to test or verify that the changes work correctly.
+
+## Files Changed
+-   List the key files that were modified.
 
 ---
 **DIFF:**
 {diff_text}
+---
 """
     data = {
         "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
