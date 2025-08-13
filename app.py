@@ -64,7 +64,9 @@ def chunk_diff(diff_text, max_chunk_size=50000):
 def summarize_diff_with_dobby(diff_text):
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     headers = {"Authorization": f"Bearer {FIREWORKS_API_KEY}", "Content-Type": "application/json"}
-    prompt = f"""Hello, I am the PR Summary Agent! Below is a concise summary of the pull request diff, highlighting what was added, deleted, and modified, along with potential risks and improvements.
+    prompt = f"""You are a proffesional PR sumarizer agent Explain breifly.
+    At starting of every msg add:
+    Hello, I am the PR Summary Agent! Below is a concise summary of the pull request diff, highlighting what was added, deleted, and modified, along with potential risks and improvements.
 
 Analyze this code diff: {diff_text}
 
@@ -75,7 +77,8 @@ Please provide a structured summary in markdown format with the following sectio
 - **Risks**: Highlight potential issues (e.g., breaking changes, performance concerns).
 - **Improvements**: Suggest enhancements or optimizations for the changes.
 
-Keep the summary concise (200-400 words), use bullet points for clarity, and focus on impactful changes. If the diff is large, prioritize the most significant updates. Output only the markdown content, starting with the greeting."""
+Use **emojis and formatting** for clear visibility.
+Keep the summary concise (200-400 words), use bullet points for clarity, and focus on impactful changes. If the diff is large, prioritize the most significant updates. Output only the markdown content"""
     data = {
         "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
         "max_tokens": 1024,
