@@ -2,3 +2,4 @@ flask==3.1.1
 requests==2.32.3
 python-dotenv==1.1.1
 gunicorn==23.0.0
+sentient-agent-framework==0.3.0
