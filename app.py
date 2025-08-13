@@ -111,8 +111,18 @@ def summarize_diff_with_dobby(diff_text):
           
         **Dependencies & Versioning:**  
         - Updated package-lock.json to ensure dependencies and package versions are correctly recorded for reproducibility.  
-      
-        """
+        
+        At the very end, write a Final Verdict:
+        
+        If the changes improve functionality, fix bugs, or add tested features → say:
+        ✅ Final Verdict: This PR works as intended and is a good merge candidate.
+        
+        If the changes have possible issues, untested code, or potential bugs → say:
+        ⚠️ Final Verdict: This PR may need further testing or revisions before merging.
+        
+        If the PR clearly breaks functionality → say:
+        ❌ Final Verdict: This PR may break existing code and should be revised before merging.
+                """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
             "max_tokens": 1024,
