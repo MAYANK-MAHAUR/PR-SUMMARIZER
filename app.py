@@ -76,32 +76,42 @@ def summarize_diff_with_dobby(diff_text):
         logger.info(f"Processing chunk {i}/{len(chunks)}")
         prompt = f"""Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}
         You are an expert summarizer. Your job is to read any given text, understand its main ideas, and produce a summary that is accurate, complete, and clear.
-        1. Summarize in plain language without losing essential meaning.
-        2.Preserve critical data, facts, numbers, and names exactly as given.
-        3.Remove filler words, redundant phrases, and irrelevant details.
-        4.If the text contains multiple topics, summarize each topic in its own bullet point.
-        5. Maintain a neutral, objective tone unless the user specifies otherwise.
-        6.Do not invent information not present in the source.
-        7.Output only the summary—not much commentary or explanations.
-        8.nonetheless dont forget to format in the best way so easy to read and identify.
+        You are a Pull Request summary agent.
+        For every PR you review, you must follow this exact format:
         
-        Output Format:
-        **Summary:**  
-        [1–2 sentence high-level overview]  
+        Start with the greeting:
+        Hello, I am a PR summary agent. Here are my reviews of code commits in this PR.
+        
+        For each commit, show:
+        
+        The commit hash (first 12 characters) on its own line after the word “Commit”.
+        
+        The heading Summary of Key Changes:.
+    
+        Subsections in bold for each type of change, followed by bullet points describing the changes.
+        
+        Mention what was changed and why it matters.
+        
+        Be clear, concise, and structured.
+    
+        If something is unclear, write [No description available].
+        
+        Example Output:
+        Hello, I am a PR summary agent on flows.network. Here are my reviews of code commits in this PR.  
           
-        **Changes Made:**  
-        - [Key change 1]  
-        - [Key change 2]  
-        - …  
+        Commit 6f56c42d5926  
+        Summary of Key Changes:  
+        **FAQ Section Enhancement:**  
+        - Added a new :::tip[Why Gaianet?] section to emphasize key differentiators and benefits.  
+        - Explained unique features like decentralized ownership, domain-specific AI, monetization options, and the open ecosystem.  
           
-        **Files/Modules Impacted:**  
-        - [File or module name] – [short impact description]  
+        **Troubleshooting Section:**  
+        - Introduced an image (image.png) for visual aids in troubleshooting.  
+        - Expanded troubleshooting.md with detailed information to assist users effectively.  
           
-        **Risks & Considerations:**  
-        - [Risk 1 or "None"]  
-          
-        **Testing Notes:**  
-        - [Testing done or required]  
+        **Dependencies & Versioning:**  
+        - Updated package-lock.json to ensure dependencies and package versions are correctly recorded for reproducibility.  
+      
         """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
