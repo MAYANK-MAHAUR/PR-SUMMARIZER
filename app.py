@@ -1,22 +1,21 @@
 import os
 import hmac
 import hashlib
-import json
 import logging
 from flask import Flask, request, jsonify
 import requests
 from urllib.parse import urlparse
-import os 
 from dotenv import load_dotenv
+
+
 load_dotenv()
 
-# Configure logging
+
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Environment variables
 FIREWORKS_API_KEY = os.getenv("FIREWORKS_API_KEY")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
@@ -26,7 +25,6 @@ if not FIREWORKS_API_KEY or not GITHUB_TOKEN:
     raise ValueError("Missing required environment variables")
 
 def verify_signature(payload, signature):
-    """Verify GitHub webhook signature."""
     if not GITHUB_WEBHOOK_SECRET:
         logger.info("No webhook secret set, skipping signature verification")
         return True
@@ -37,7 +35,6 @@ def verify_signature(payload, signature):
     return is_valid
 
 def fetch_pr_diff(owner, repo, pull_number):
-    """Fetch the diff of a GitHub PR."""
     logger.info(f"Fetching diff for {owner}/{repo}/pull/{pull_number}")
     headers = {
         'Accept': 'application/vnd.github.v3.diff',
@@ -46,42 +43,64 @@ def fetch_pr_diff(owner, repo, pull_number):
     url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pull_number}"
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    logger.debug(f"Diff fetched, length={len(response.text)}")
-    return response.text
+    diff_text = response.text
+    logger.debug(f"Diff fetched, length={len(diff_text)}")
+    return diff_text
+
+def chunk_diff(diff_text, max_chunk_size=50000):
+    logger.info(f"Chunking diff of length {len(diff_text)}")
+    chunks = []
+    current_chunk = ""
+    lines = diff_text.splitlines()
+    for line in lines:
+        if len(current_chunk) + len(line) + 1 > max_chunk_size:
+            if current_chunk:
+                chunks.append(current_chunk)
+            current_chunk = line + "\n"
+        else:
+            current_chunk += line + "\n"
+    if current_chunk:
+        chunks.append(current_chunk)
+    logger.debug(f"Created {len(chunks)} chunks")
+    return chunks
 
 def summarize_diff_with_dobby(diff_text):
-    """Use Dobby-70 via Fireworks AI to summarize the diff."""
-    logger.info("Sending diff to Fireworks API for summarization")
+    logger.info("Summarizing diff with Fireworks API")
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": f"Bearer {FIREWORKS_API_KEY}",
     }
-    if len(diff_text) > 100000:
-        logger.warning("Diff too large, truncating to 100,000 characters")
-        diff_text = diff_text[:100000] + "\n... (truncated)"
     
-    prompt = f"Summarize this code diff: {diff_text}\nHighlight key changes, potential risks, and improvements."
-    
-    data = {
-        "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
-        "max_tokens": 1024,
-        "top_p": 1,
-        "top_k": 40,
-        "presence_penalty": 0,
-        "frequency_penalty": 0,
-        "temperature": 0.6,
-        "messages": [{"role": "user", "content": prompt}]
-    }
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    summary = response.json()['choices'][0]['message']['content']
-    logger.info("Summary generated successfully")
-    return summary
+    chunks = chunk_diff(diff_text, max_chunk_size=50000)
+    summaries = []
+    for i, chunk in enumerate(chunks, 1):
+        logger.info(f"Processing chunk {i}/{len(chunks)}")
+        prompt = f"Summarize this code diff chunk ({i}/{len(chunks)}): {chunk}\nHighlight key changes, potential risks, and improvements."
+        data = {
+            "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
+            "max_tokens": 1024,
+            "top_p": 1,
+            "top_k": 40,
+            "presence_penalty": 0,
+            "frequency_penalty": 0,
+            "temperature": 0.6,
+            "messages": [{"role": "user", "content": prompt}]
+        }
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            summary = response.json()['choices'][0]['message']['content']
+            summaries.append(f"**Chunk {i} Summary**:\n{summary}")
+        except Exception as e:
+            logger.error(f"Error summarizing chunk {i}: {str(e)}")
+            summaries.append(f"**Chunk {i} Summary**: Error processing chunk")
+    combined_summary = "\n\n".join(summaries)
+    logger.info("Combined summary generated")
+    return combined_summary
 
 def post_comment_to_pr(owner, repo, pull_number, comment):
-    """Post a comment to the GitHub PR."""
     logger.info(f"Posting comment to {owner}/{repo}/pull/{pull_number}")
     headers = {
         'Authorization': f'token {GITHUB_TOKEN}',
@@ -123,7 +142,7 @@ def webhook():
     try:
         diff_text = fetch_pr_diff(owner, repo, pull_number)
         summary = summarize_diff_with_dobby(diff_text)
-        comment = f"**PR Summary by Dobby-70:**\n\n{summary}"
+        comment = f"**PR Summary by Dobby-70**:\n\n{summary}"
         post_comment_to_pr(owner, repo, pull_number, comment)
         logger.info("Webhook processed successfully")
         return jsonify({'message': 'Summary posted'}), 200
@@ -132,4 +151,5 @@ def webhook():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.getenv("PORT", 5000)) 
+    app.run(host='0.0.0.0', port=port)
