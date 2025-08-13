@@ -83,7 +83,7 @@ def summarize_diff_with_dobby(diff_text):
         5. Maintain a neutral, objective tone unless the user specifies otherwise.
         6.Do not invent information not present in the source.
         7.Output only the summary—not much commentary or explanations.
-              
+        8.nonetheless dont forget to format in the best way so easy to read and identify.
         """
         data = {
             "model": "accounts/sentientfoundation/models/dobby-unhinged-llama-3-3-70b-new",
